@@ -1,9 +1,17 @@
-import pyttsx3
-import speech_recognition as sr
-import webbrowser
-import subprocess
+import os
 import time
 import datetime
+import requests
+import webbrowser
+import subprocess
+import pyttsx3
+import speech_recognition as sr
+import dotenv
+import wikipedia
+
+#init
+dotenv.load_dotenv()
+wikipedia.set_lang('es')
 
 #config pyttsx3
 engine = pyttsx3.init('sapi5')
@@ -26,11 +34,11 @@ def Listen(name):
             print(f"Escuché : {command}\n")
         except sr.UnknownValueError:
             Speak("No entendí.")
-            return "None"
+            return ""
         except sr.RequestError as e:
             Speak("Sin servicio de Google.")
             print(e)
-            return "None"
+            return ""
         return command.lower()
 
 #config main function
@@ -63,5 +71,14 @@ if __name__=='__main__':
                     Speak('No se apagará la computadora.')
             elif 'hora' in comm:
                 Speak('Son las {} horas con {} minutos'.format(datetime.datetime.now().strftime("%H"),datetime.datetime.now().strftime("%M")))
-            
-
+            elif 'tiempo' in comm or 'clima' in comm or 'temp' in comm:
+                #https://www.weatherapi.com/
+                Speak('¿De dónde quieres saber el clima?')
+                location = Listen('Esperando locación...').replace(" ","_")          
+                weather = requests.get('http://api.weatherapi.com/v1/current.json?key={}&q={}&lang=es'.format(os.getenv('WEATHER_API'),'Lima')).json()
+                Speak('El clima es '+ weather['current']['condition']['text'] + ' y la temperatura es '+ str(weather['current']['temp_c']))
+            elif 'ipedia' in comm:
+                Speak('¿Qué quieres buscar en Wikipedia?')
+                search_keys = Listen('Esperando valores...')
+                Speak(wikipedia.summary(search_keys, sentences = 3))
+                
