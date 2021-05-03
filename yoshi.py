@@ -8,10 +8,16 @@ import pyttsx3
 import speech_recognition as sr
 import dotenv
 import wikipedia
+import pypresence
 
 #init
 dotenv.load_dotenv()
 wikipedia.set_lang('es')
+
+#discord presence
+RPC = pypresence.Presence(os.getenv('DISCORD_CLIENT_ID'))
+RPC.connect()
+RPC.update(state='Yoshino :D', large_image = 'yoshifull', details = 'Ni pe2 taba aburrido.')
 
 #config pyttsx3
 engine = pyttsx3.init('sapi5')
@@ -33,27 +39,26 @@ def Listen(name):
             command = r.recognize_google(audio, language='es-US')
             print(f"Escuché : {command}\n")
         except sr.UnknownValueError:
-            Speak("No entendí.")
+            print("No entendí.")
             return ""
         except sr.RequestError as e:
             Speak("Sin servicio de Google.")
             print(e)
+            
             return ""
         return command.lower()
 
 #config main function
 if __name__=='__main__':
     while 1:
-        ok = Listen('Esperando Activación...')
-        if 'yoshi' in ok:
+        if(datetime.datetime.now().minute == 0):
+            subprocess.run(['python','D:/Archivos/yoshi/anotherComms/clase.py'])     
+        comm = Listen('Esperando Activación...')
+        if 'yoshino' in comm:
             print('Palabra clave dicha...')
-            Speak('¿Cómo puedo ayudarte?')
-            comm = Listen('Esperando Comando...')
             if 'fuera' in comm:
                 Speak('Apagando a Yochi...')
                 exit()
-            elif 'cancel' in comm:
-                Speak('Activación Cancelada...')
             elif 'navegador' in comm or 'buscador' in comm or 'google' in comm:
                 Speak('Abriendo Google...')
                 webbrowser.open_new_tab('www.google.com')
@@ -69,16 +74,17 @@ if __name__=='__main__':
                     exit()
                 else:
                     Speak('No se apagará la computadora.')
+            elif 'clase' in comm:
+                subprocess.run(['python','D:/Archivos/yoshi/anotherComms/clase.py'])     
             elif 'hora' in comm:
                 Speak('Son las {} horas con {} minutos'.format(datetime.datetime.now().strftime("%H"),datetime.datetime.now().strftime("%M")))
             elif 'tiempo' in comm or 'clima' in comm or 'temp' in comm:
                 #https://www.weatherapi.com/
-                Speak('¿De dónde quieres saber el clima?')
-                location = Listen('Esperando locación...').replace(" ","_")          
+                #Speak('¿De dónde quieres saber el clima?')
+                #location = Listen('Esperando locación...').replace(" ","_")          
                 weather = requests.get('http://api.weatherapi.com/v1/current.json?key={}&q={}&lang=es'.format(os.getenv('WEATHER_API'),'Lima')).json()
                 Speak('El clima es '+ weather['current']['condition']['text'] + ' y la temperatura es '+ str(weather['current']['temp_c']))
             elif 'ipedia' in comm:
                 Speak('¿Qué quieres buscar en Wikipedia?')
                 search_keys = Listen('Esperando valores...')
-                Speak(wikipedia.summary(search_keys, sentences = 3))
-                
+                Speak(wikipedia.summary(search_keys, sentences = 2))          
